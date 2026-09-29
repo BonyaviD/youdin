@@ -1,0 +1,608 @@
+<meta charset="utf-8">
+<title>YouDin Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:wght@300;400&family=Vazirmatn:wght@100;200;300;400&family=Amiri&display=swap">
+<style>
+/* Layout: quiet editorial scroll — sage hero with the wordmark on a 3×2 grid, then alternating ivory / image / stone bands; the D (and the Persian «د» inside it) is the only curve in the system. */
+:root {
+  color-scheme: light;
+  --sage: #C9C8B3;
+  --sage-deep: #A9A892;
+  --ivory: #F5EFDD;
+  --stone: #B0B0B0;
+  --mist: #BFC0BA;
+  --smoke: #605F5A;
+  --ink: #2A2926;
+  --white: #FFFFFF;
+
+  --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --f-body: "Jost", "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+  --f-fa: "Vazirmatn", "Tahoma", sans-serif;
+  --f-fa-quote: "Amiri", "Vazirmatn", serif;
+
+  --gutter: clamp(16px, 4vw, 56px);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --slow: 1100ms;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+html:lang(fa) body { font-family: var(--f-fa); font-weight: 300; line-height: 1.95; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+
+/* film grain over everything, echoing the reference photography */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: .07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.wrap { padding-inline: var(--gutter); }
+.eyebrow {
+  font-family: var(--f-body);
+  font-size: 11px;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+html:lang(fa) .eyebrow { font-family: var(--f-fa); letter-spacing: 0; font-size: 13px; }
+
+/* ---------- header ---------- */
+.site-header {
+  position: fixed; inset-inline: 0; top: 0;
+  z-index: 40;
+  padding-top: env(safe-area-inset-top, 0px);
+  color: var(--ivory);
+  transition: background-color .6s var(--ease), color .6s var(--ease);
+}
+.site-header.solid { background: color-mix(in srgb, var(--ivory) 90%, transparent); color: var(--ink); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.site-header .bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding-block: 20px;
+  padding-inline: var(--gutter);
+}
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand svg { width: 20px; height: 22px; }
+.brand span { font-family: var(--f-body); font-weight: 300; letter-spacing: .38em; font-size: 13px; }
+.nav { display: flex; gap: clamp(20px, 3vw, 44px); }
+.nav a { text-decoration: none; position: relative; font-size: 13px; }
+.nav a::after {
+  content: ""; position: absolute; inset-inline: 0; bottom: -4px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: var(--origin-end, right);
+  transition: transform .6s var(--ease);
+}
+.nav a:hover::after { transform: scaleX(1); transform-origin: var(--origin-start, left); }
+html[dir="rtl"] .nav a::after { --origin-end: left; --origin-start: right; }
+.lang {
+  border: 1px solid currentColor; background: none; cursor: pointer;
+  padding: 6px 14px; border-radius: 999px; font-size: 12px; letter-spacing: .12em;
+  transition: background-color .4s var(--ease), color .4s var(--ease);
+}
+.lang:hover { background: currentColor; }
+.lang:hover span { color: var(--sage); }
+.site-header.solid .lang:hover span { color: var(--ivory); }
+@media (max-width: 760px) { .nav { display: none; } }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative;
+  background: var(--sage);
+  color: var(--ivory);
+  min-height: min(100svh, 980px);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding-top: calc(96px + env(safe-area-inset-top, 0px));
+  overflow: hidden;
+}
+.wordmark {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: center;
+  justify-items: center;
+  row-gap: clamp(8px, 4vw, 64px);
+  padding-inline: clamp(24px, 10vw, 180px);
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: clamp(72px, 24vw, 230px);
+  line-height: 1;
+}
+.wordmark span {
+  display: block;
+  animation: letter-in 1.6s var(--ease) both;
+  animation-delay: calc(var(--i) * 120ms + 150ms);
+}
+@keyframes letter-in {
+  from { opacity: 0; transform: translateY(18%); filter: blur(10px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+/* physical left/right here: logical insets would follow the vertical writing mode */
+.hero-vertical {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 120px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 12px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  font-family: var(--f-body);
+}
+html[dir="rtl"] .hero-vertical { left: auto; right: var(--gutter); }
+.hero-foot {
+  display: flex; align-items: end; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  padding-block: 28px 32px;
+}
+.hero-foot p { margin: 0; max-width: 34ch; }
+.hero-foot .who { font-family: var(--f-display); font-style: italic; font-size: clamp(18px, 2vw, 22px); }
+html:lang(fa) .hero-foot .who { font-family: var(--f-fa); font-style: normal; font-weight: 200; }
+.scroll-cue { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
+.scroll-cue svg { width: 29px; height: 32px; overflow: visible; }
+.draw path.outline {
+  stroke-dasharray: 320; stroke-dashoffset: 320;
+  animation: draw 2.4s var(--ease) .9s forwards;
+}
+.draw path.dal { opacity: 0; animation: fade 1.2s var(--ease) 2.4s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fade { to { opacity: 1; } }
+
+/* ---------- name ---------- */
+.name {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(40px, 8vw, 140px);
+  align-items: center;
+  padding-block: clamp(96px, 14vw, 200px);
+}
+.name-mark { width: min(100%, 360px); justify-self: center; }
+.name-mark svg { width: 100%; height: auto; display: block; }
+.name-split {
+  direction: ltr;
+  font-family: var(--f-display);
+  font-size: clamp(44px, 7vw, 104px);
+  line-height: 1.05;
+  margin: 28px 0 32px;
+  color: var(--mist);
+}
+.name-split b { font-weight: 400; color: var(--ink); }
+.name-split .eq { display: block; font-size: .42em; color: var(--smoke); margin-top: .5em; font-style: italic; }
+html:lang(fa) .name-split { text-align: right; }
+.name-text { max-width: 46ch; color: var(--smoke); margin: 0; font-size: 17px; }
+@media (max-width: 760px) {
+  .name { grid-template-columns: 1fr; }
+  .name-mark { width: 180px; }
+}
+
+/* ---------- manifesto / photo ---------- */
+.photo {
+  position: relative;
+  margin: 0;
+  height: clamp(420px, 85vh, 860px);
+  overflow: hidden;
+  background: var(--smoke);
+}
+.photo img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: blur(calc(var(--blur, 1) * 14px)) saturate(.9);
+  transform: scale(calc(1.02 + var(--blur, 1) * .08));
+  transition: filter .2s linear;
+}
+.photo figcaption {
+  position: absolute; inset-inline-end: var(--gutter); bottom: 28px;
+  color: var(--ivory);
+}
+
+.manifesto { padding-block: clamp(96px, 14vw, 200px); display: grid; gap: 40px; justify-items: center; text-align: center; }
+.manifesto blockquote {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--f-display);
+  font-size: clamp(34px, 5.4vw, 76px);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.manifesto blockquote em { color: var(--sage-deep); }
+html:lang(fa) .manifesto blockquote { font-family: var(--f-fa-quote); line-height: 1.5; max-width: 18ch; }
+.manifesto p { margin: 0; max-width: 44ch; color: var(--smoke); }
+
+/* ---------- collection ---------- */
+.collection { background: var(--sage); padding-block: clamp(80px, 11vw, 160px); }
+.collection-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 56px; }
+.collection-head h2 {
+  margin: 12px 0 0; font-family: var(--f-display); font-weight: 400;
+  font-size: clamp(40px, 6vw, 88px); line-height: 1;
+}
+html:lang(fa) .collection-head h2 { font-family: var(--f-fa); font-weight: 100; }
+.sample-note { color: var(--smoke); font-size: 13px; max-width: 30ch; margin: 0; }
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(220px, 26vw, 360px);
+  gap: clamp(20px, 3vw, 44px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-inline: var(--gutter);
+  padding-bottom: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--smoke) transparent;
+}
+.look { scroll-snap-align: start; margin: 0; }
+.look .frame { overflow: hidden; aspect-ratio: 3 / 4; max-width: 100%; background: var(--smoke); }
+.look.arch .frame { border-radius: 999px 999px 0 0; }
+.look.d .frame { border-start-end-radius: 50% 50%; border-end-end-radius: 50% 50%; }
+.look.wide { grid-column: span 2; }
+.look.wide .frame { aspect-ratio: 3 / 2; }
+.look img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transform: scale(1.04);
+  transition: transform 1.4s var(--ease), filter 1.4s var(--ease);
+  filter: grayscale(.2);
+}
+.look:hover img { transform: scale(1.1); filter: none; }
+.look figcaption { display: flex; justify-content: space-between; gap: 16px; padding-top: 16px; font-size: 14px; }
+.look figcaption span:first-child { font-family: var(--f-display); font-style: italic; font-size: 18px; }
+html:lang(fa) .look figcaption span:first-child { font-family: var(--f-fa); font-style: normal; font-weight: 300; font-size: 15px; }
+.look figcaption span:last-child { color: var(--smoke); }
+@media (max-width: 760px) { .look.wide { grid-column: span 1; } .look.wide .frame { aspect-ratio: 3 / 4; } }
+
+/* ---------- marquee ---------- */
+.marquee { background: var(--ink); color: var(--ivory); overflow: hidden; padding-block: 28px; direction: ltr; }
+.marquee-row { display: flex; width: max-content; animation: slide 38s linear infinite; }
+.marquee-row > div { display: flex; align-items: center; gap: 48px; padding-inline-end: 48px; white-space: nowrap; }
+.marquee .en { font-family: var(--f-display); font-style: italic; font-size: clamp(32px, 5vw, 64px); }
+.marquee .fa { font-family: var(--f-fa); font-weight: 100; font-size: clamp(28px, 4.4vw, 56px); direction: rtl; }
+.marquee svg { width: 29px; height: 32px; flex: none; }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* ---------- atelier ---------- */
+.atelier {
+  position: relative;
+  background: var(--stone);
+  color: var(--ink);
+  overflow: hidden;
+  padding-block: clamp(96px, 14vw, 200px);
+}
+.atelier-d {
+  position: absolute; inset-block: 8%; inset-inline-end: 6%;
+  height: 84%; width: auto; opacity: .95;
+}
+html[dir="rtl"] .atelier-d { transform: scaleX(-1); }
+.atelier-body { position: relative; max-width: 560px; display: grid; gap: 24px; }
+.atelier h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(40px, 6vw, 84px); line-height: 1.02; }
+html:lang(fa) .atelier h2 { font-family: var(--f-fa); font-weight: 200; line-height: 1.3; }
+.atelier p { margin: 0; max-width: 40ch; }
+.btn {
+  position: relative; isolation: isolate; overflow: hidden;
+  justify-self: start;
+  display: inline-flex; align-items: center; gap: 14px;
+  padding: 16px 30px;
+  border: 1px solid var(--ink);
+  border-start-end-radius: 999px; border-end-end-radius: 999px;
+  text-decoration: none; font-size: 14px; letter-spacing: .08em;
+  transition: color .7s var(--ease);
+}
+.btn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--ink);
+  border-start-end-radius: 999px; border-end-end-radius: 999px;
+  transform: translateX(-101%);
+  transition: transform .7s var(--ease);
+}
+html[dir="rtl"] .btn::before { transform: translateX(101%); }
+.btn:hover { color: var(--ivory); }
+.btn:hover::before, html[dir="rtl"] .btn:hover::before { transform: none; }
+@media (max-width: 760px) { .atelier-d { opacity: .45; inset-inline-end: -20%; } }
+
+/* ---------- footer ---------- */
+.site-footer { background: var(--ink); color: var(--ivory); padding-block: 80px 40px; }
+.footer-word {
+  direction: ltr;
+  font-family: var(--f-body); font-weight: 300;
+  font-size: clamp(44px, 13vw, 200px);
+  letter-spacing: .12em; line-height: 1;
+  margin: 0 0 56px;
+  display: flex; align-items: center; gap: .18em;
+}
+.footer-word svg { height: .78em; width: auto; flex: none; }
+.footer-row { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; font-size: 13px; color: var(--mist); border-top: 1px solid color-mix(in srgb, var(--ivory) 20%, transparent); padding-top: 24px; }
+.footer-row a { text-decoration: none; }
+.footer-row a:hover { color: var(--ivory); }
+
+/* ---------- prototype badge ---------- */
+.head-end { display: flex; align-items: center; gap: 12px; }
+.proto {
+  font-size: 11px; letter-spacing: .1em;
+  padding: 7px 12px; border-radius: 999px;
+  background: var(--ink); color: var(--ivory);
+}
+
+/* ---------- reveal ---------- */
+.reveal { transition: transform 1.2s var(--ease), opacity 1.2s var(--ease); }
+.reveal.pending { transform: translateY(28px); opacity: .35; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .draw path.outline { stroke-dashoffset: 0; }
+  .draw path.dal { opacity: 1; }
+  .photo img { filter: none; transform: none; }
+  .reveal.pending { transform: none; opacity: 1; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- D: one straight side, one half circle (traced from the logo). «د» sits inside it. -->
+    <path id="d-shape" d="M0 0 H40 A50 50 0 0 1 40 100 H0 Z"/>
+    <path id="dal" d="M27.6 19.7 C27.1 20 26.5 20.6 26.1 21.7 C25.7 22.8 25.2 24.4 25.1 26 C25 27.6 25.2 29.9 25.6 31.5 C26 33.1 26.1 34.2 27.6 35.5 C29.1 36.8 31.6 38.1 34.5 39.4 C37.4 40.7 41.3 42 44.8 43.3 C48.2 44.6 52.2 46 55.2 47.3 C58.2 48.6 60.8 49.4 62.6 51.2 C64.4 53 65.8 56 66 58 C66.2 60 65.2 61.5 64 63 C62.8 64.5 61 65.7 58.6 67 C56.2 68.3 53.3 69.6 49.8 70.9 C46.3 72.2 41.5 73.6 37.4 74.9 C33.3 76.2 28.6 77.5 25.1 78.8 C21.6 80.1 19 81.5 16.3 82.8 C13.6 84.1 11.1 85.4 8.9 86.7 C6.8 88 4.7 89.5 3.4 90.6 C2.1 91.7 -0.9 93.1 1.2 93.4 C3.3 93.7 12.4 93.1 15.8 92.6 C19.2 92.1 18.9 91.2 21.7 90.6 C24.5 89.9 29.1 89.3 32.5 88.7 C35.9 88.1 39.2 87.4 41.9 86.7 C44.6 86 46.6 85.4 48.8 84.7 C51 84 53.4 83.5 55.2 82.8 C57 82.1 58.4 81.5 59.6 80.8 C60.8 80.1 61.6 79.5 62.6 78.8 C63.6 78.1 64.7 77.4 65.5 76.8 C66.3 76.2 66.8 75.6 67.5 74.9 C68.2 74.2 68.9 73.6 69.5 72.9 C70.1 72.2 70.3 71.9 70.9 70.9 C71.5 69.9 72.3 68.3 72.9 67 C73.5 65.7 74 64.5 74.4 63 C74.8 61.5 75.4 59.8 75.4 58 C75.4 56.2 74.8 53.5 74.4 52 C74 50.5 73.5 50.4 72.9 49.3 C72.3 48.2 71.9 46.6 70.9 45.3 C69.9 44 68.5 42.7 67 41.4 C65.5 40.1 64.1 38.7 62.1 37.4 C60.1 36.1 58.1 34.8 55.2 33.5 C52.3 32.2 48.1 30.9 44.8 29.6 C41.5 28.3 37.9 26.9 35.5 25.6 C33.1 24.3 31.6 22.7 30.5 21.7 C29.4 20.7 29.6 20 29.1 19.7 C28.6 19.4 28.1 19.4 27.6 19.7Z"/>
+  </defs>
+</svg>
+
+<header class="site-header" id="header">
+  <div class="bar">
+    <a class="brand" href="#top" aria-label="YouDin">
+      <svg viewBox="0 0 90 100" aria-hidden="true"><use href="#d-shape" fill="currentColor"/></svg>
+      <span>YOUDIN</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#collection" data-i18n="nav.collections">کالکشن‌ها</a>
+      <a href="#name" data-i18n="nav.about">درباره</a>
+      <a href="#atelier" data-i18n="nav.atelier">آتلیه</a>
+      <a href="#contact" data-i18n="nav.contact">تماس</a>
+    </nav>
+    <div class="head-end">
+      <span class="proto" data-i18n="proto">نمونهٔ آزمایشی</span>
+      <button class="lang" id="lang" type="button" aria-label="Switch language"><span>EN</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" id="hero">
+    <h1 class="wordmark" aria-label="YouDin">
+      <span style="--i:0">Y</span><span style="--i:1">o</span><span style="--i:2">u</span>
+      <span style="--i:3">D</span><span style="--i:4">i</span><span style="--i:5">n</span>
+    </h1>
+    <div class="hero-vertical" aria-hidden="true">Seize The Day</div>
+    <div class="hero-foot wrap">
+      <p class="who" data-i18n="hero.who">دینا یوسفی — طراحی لباس</p>
+      <a class="scroll-cue" href="#name">
+        <span class="eyebrow" data-i18n="hero.scroll">ادامه</span>
+        <svg class="draw" viewBox="0 0 90 100" aria-hidden="true">
+          <path class="outline" d="M1.5 1.5 H40 A48.5 48.5 0 0 1 40 98.5 H1.5 Z" fill="none" stroke="currentColor" stroke-width="3"/>
+          <use class="dal" href="#dal" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <section class="name wrap" id="name">
+    <div class="name-mark reveal">
+      <svg viewBox="0 0 90 100" role="img" aria-label="D mark with the Persian letter dal">
+        <use href="#d-shape" fill="var(--ink)"/>
+        <use href="#dal" fill="var(--ivory)"/>
+      </svg>
+    </div>
+    <div class="reveal">
+      <div class="eyebrow" data-i18n="name.eyebrow">یک اسم، تا خورده در یک کلمه</div>
+      <p class="name-split">
+        <b>You</b>sefi<br>
+        <b>Din</b>a
+        <span class="eq">= YouDin</span>
+      </p>
+      <p class="name-text" data-i18n="name.text">یودین نام دینا یوسفی است، تا خورده در یک کلمه. در دل حرف D حرف دیگری پنهان است: «د»، حرف اول دینا. یک نشانه، به دو زبان.</p>
+    </div>
+  </section>
+
+  <figure class="photo" id="photo">
+    <img src="img/seize-the-day.jpg" alt="Garments hanging on a rail, soft focus, with the words Seize The Day">
+  </figure>
+
+  <section class="manifesto wrap">
+    <div class="eyebrow" data-i18n="man.eyebrow">Seize The Day</div>
+    <blockquote class="reveal" data-i18n-html="man.quote">لباس‌هایی که با حوصله بریده می‌شوند، برای <em>روزهایی</em> که ارزش ماندن دارند.</blockquote>
+    <p class="reveal" data-i18n="man.text">هر لباس از پارچه شروع می‌شود: وزنش، افتادنش، و نوری که رویش می‌نشیند.</p>
+  </section>
+
+  <section class="collection" id="collection">
+    <div class="collection-head wrap">
+      <div>
+        <div class="eyebrow" data-i18n="col.eyebrow">کالکشن ۰۱</div>
+        <h2 data-i18n="col.title">یادداشت‌های پاییز</h2>
+      </div>
+      <p class="sample-note" data-i18n="col.note">عکس‌ها و نام‌ها نمونه‌اند و با کارهای واقعی جایگزین می‌شوند.</p>
+    </div>
+    <div class="track" tabindex="0" aria-label="Collection looks">
+      <figure class="look arch">
+        <div class="frame"><img src="img/look-01.jpg" alt="Sample look 01" loading="lazy"></div>
+        <figcaption><span data-i18n="l1.n">لوک ۰۱</span><span data-i18n="l1.m">پشم، خاکستری سنگی</span></figcaption>
+      </figure>
+      <figure class="look d">
+        <div class="frame"><img src="img/look-02.jpg" alt="Sample look 02" loading="lazy"></div>
+        <figcaption><span data-i18n="l2.n">لوک ۰۲</span><span data-i18n="l2.m">کتان، مریمی</span></figcaption>
+      </figure>
+      <figure class="look wide">
+        <div class="frame"><img src="img/look-04.jpg" alt="Sample look 03" loading="lazy"></div>
+        <figcaption><span data-i18n="l3.n">لوک ۰۳</span><span data-i18n="l3.m">نخ، عاجی</span></figcaption>
+      </figure>
+      <figure class="look arch">
+        <div class="frame"><img src="img/look-03.jpg" alt="Sample look 04" loading="lazy"></div>
+        <figcaption><span data-i18n="l4.n">لوک ۰۴</span><span data-i18n="l4.m">پشم، دودی</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-row">
+      <div>
+        <span class="en">Seize The Day</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="fa">روز را دریاب</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="en">Seize The Day</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="fa">روز را دریاب</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+      </div>
+      <div>
+        <span class="en">Seize The Day</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="fa">روز را دریاب</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="en">Seize The Day</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+        <span class="fa">روز را دریاب</span>
+        <svg viewBox="0 0 90 100"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <section class="atelier wrap" id="atelier">
+    <svg class="atelier-d" viewBox="0 0 80 100" aria-hidden="true">
+      <path d="M0.6 0.6 H30 A49.4 49.4 0 0 1 30 99.4 H0.6 Z" fill="none" stroke="var(--white)" stroke-width="0.6"/>
+    </svg>
+    <div class="atelier-body reveal">
+      <div class="eyebrow" data-i18n="at.eyebrow">آتلیه</div>
+      <h2 data-i18n="at.title">وقت پرو رزرو کنید</h2>
+      <p data-i18n="at.text">پرو فقط با وقت قبلی است. روزش را بگویید تا لباس‌ها را آماده کنیم.</p>
+      <a class="btn" href="#contact"><span data-i18n="at.btn">درخواست وقت</span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer wrap" id="contact">
+  <p class="footer-word" aria-label="YouDin">
+    <svg viewBox="0 0 90 100" aria-hidden="true"><use href="#d-shape" fill="currentColor"/><use href="#dal" fill="var(--ink)"/></svg>
+    YOUDIN
+  </p>
+  <div class="footer-row">
+    <span data-i18n="ft.copy">© ۲۰۲۶ یودین · دینا یوسفی</span>
+    <a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
+    <span data-i18n="ft.proto">نسخهٔ نمایشی برای بررسی ایده</span>
+  </div>
+</footer>
+
+
+<script>
+(function () {
+  var dict = {
+    fa: {
+      "nav.collections": "کالکشن‌ها", "nav.about": "درباره", "nav.atelier": "آتلیه", "nav.contact": "تماس",
+      "hero.who": "دینا یوسفی — طراحی لباس", "hero.scroll": "ادامه",
+      "name.eyebrow": "یک اسم، تا خورده در یک کلمه",
+      "name.text": "یودین نام دینا یوسفی است، تا خورده در یک کلمه. در دل حرف D حرف دیگری پنهان است: «د»، حرف اول دینا. یک نشانه، به دو زبان.",
+      "man.eyebrow": "روز را دریاب",
+      "man.quote": "لباس‌هایی که با حوصله بریده می‌شوند، برای <em>روزهایی</em> که ارزش ماندن دارند.",
+      "man.text": "هر لباس از پارچه شروع می‌شود: وزنش، افتادنش، و نوری که رویش می‌نشیند.",
+      "col.eyebrow": "کالکشن ۰۱", "col.title": "یادداشت‌های پاییز",
+      "col.note": "عکس‌ها و نام‌ها نمونه‌اند و با کارهای واقعی جایگزین می‌شوند.",
+      "l1.n": "لوک ۰۱", "l1.m": "پشم، خاکستری سنگی",
+      "l2.n": "لوک ۰۲", "l2.m": "کتان، مریمی",
+      "l3.n": "لوک ۰۳", "l3.m": "نخ، عاجی",
+      "l4.n": "لوک ۰۴", "l4.m": "پشم، دودی",
+      "at.eyebrow": "آتلیه", "at.title": "وقت پرو رزرو کنید",
+      "at.text": "پرو فقط با وقت قبلی است. روزش را بگویید تا لباس‌ها را آماده کنیم.",
+      "at.btn": "درخواست وقت",
+      "ft.copy": "© ۲۰۲۶ یودین · دینا یوسفی", "ft.proto": "نسخهٔ نمایشی برای بررسی ایده",
+      "proto": "نمونهٔ آزمایشی"
+    },
+    en: {
+      "nav.collections": "Collections", "nav.about": "About", "nav.atelier": "Atelier", "nav.contact": "Contact",
+      "hero.who": "Dina Yousefi — Fashion Design", "hero.scroll": "Scroll",
+      "name.eyebrow": "One name, folded into one word",
+      "name.text": "YouDin is Dina Yousefi’s name folded into one word. The D carries a second letter inside it: the Persian «د», the first letter of Dina. One mark, two languages.",
+      "man.eyebrow": "Seize The Day",
+      "man.quote": "Clothes cut slowly, for the <em>days</em> worth keeping.",
+      "man.text": "Every piece starts from the fabric: its weight, its fall, the way it holds the light.",
+      "col.eyebrow": "Collection 01", "col.title": "Autumn Notes",
+      "col.note": "Photos and names are placeholders, to be replaced with the real work.",
+      "l1.n": "Look 01", "l1.m": "Wool, stone grey",
+      "l2.n": "Look 02", "l2.m": "Linen, sage",
+      "l3.n": "Look 03", "l3.m": "Cotton, ivory",
+      "l4.n": "Look 04", "l4.m": "Wool, smoke",
+      "at.eyebrow": "Atelier", "at.title": "Book a fitting",
+      "at.text": "Fittings are by appointment. Tell us the day and we’ll have the pieces ready.",
+      "at.btn": "Request a time",
+      "ft.copy": "© 2026 YouDin · Dina Yousefi", "ft.proto": "Prototype for reviewing the direction",
+      "proto": "Prototype"
+    }
+  };
+
+  var root = document.documentElement;
+  var btn = document.getElementById("lang");
+
+  function setLang(lang) {
+    root.lang = lang;
+    root.dir = lang === "fa" ? "rtl" : "ltr";
+    var t = dict[lang];
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var k = el.getAttribute("data-i18n");
+      if (t[k] != null) el.textContent = t[k];
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+      var k = el.getAttribute("data-i18n-html");
+      if (t[k] != null) el.innerHTML = t[k];
+    });
+    btn.querySelector("span").textContent = lang === "fa" ? "EN" : "فا";
+    try { localStorage.setItem("youdin-lang", lang); } catch (e) {}
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem("youdin-lang"); } catch (e) {}
+  setLang(saved === "en" ? "en" : "fa");
+  btn.addEventListener("click", function () { setLang(root.lang === "fa" ? "en" : "fa"); });
+
+  // header turns solid once the sage hero has scrolled away
+  var header = document.getElementById("header");
+  var hero = document.getElementById("hero");
+  var photo = document.getElementById("photo");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function onScroll() {
+    header.classList.toggle("solid", hero.getBoundingClientRect().bottom < 72);
+    if (!reduce) {
+      // photo comes into focus as it reaches the middle of the screen
+      var r = photo.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var p = 1 - (r.top + r.height / 2 - vh / 2) / vh;
+      var blur = Math.min(1, Math.max(0, 1 - p * 1.4));
+      photo.style.setProperty("--blur", blur.toFixed(3));
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  onScroll();
+
+  // gentle rise for elements below the fold; anything already on screen stays put
+  if (!reduce && "IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.remove("pending"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -10% 0px" });
+    document.querySelectorAll(".reveal").forEach(function (el) {
+      if (el.getBoundingClientRect().top > window.innerHeight) {
+        el.classList.add("pending");
+        io.observe(el);
+      }
+    });
+  }
+})();
+</script>
